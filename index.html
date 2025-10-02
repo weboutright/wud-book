@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking</title>
+    <link rel="icon" type="image/png" href="img/favicon.svg">
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Square Web Payments SDK -->
+    <script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+    <style>
+        /* Custom fonts and exact styling to match the reference */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .booking-container {
+            width: 100%;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            background-image: url('img/img-1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #3a5bb4;
+            padding: 20px 16px;
+            position: relative;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(8, 73, 39, 0.3);
+            pointer-events: none;
+        }
+
+        .brand-section {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            max-width: 160px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+
+        .brand-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .provider-avatar {
+            width: 32px;
+            height: 32px;
+            background: #3a5bb4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .provider-name {
+            font-weight: 500;
+            color: #111827;
+            font-size: 14px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .detail-icon {
+            width: 16px;
+            height: 16px;
+            color: #ffd700;
+        }
+
+        .description {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            padding: 16px;
+            background: white;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-time-selector {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Calendar Styles */
+        .calendar-section {
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .calendar-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 12px 0;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .month-year {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 15px;
+        }
+
+        .nav-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f8fafc;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .nav-button:hover {
+            background: #3a5bb4;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 1px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .calendar-day-header {
+            background: #f8fafc;
+            padding: 8px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 4px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            color: #374151;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .calendar-day:hover {
+            background: #d4dbd6;
+            color: #3a5bb4;
+            transform: translateY(-1px);
+        }
+
+        .calendar-day.available {
+            background: #e8f0f2;
+            color: #3a5bb4;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .calendar-day.available::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 3px;
+            background: #3a5bb4;
+            border-radius: 50%;
+        }
+
+        .calendar-day.selected {
+            background: #3a5bb4;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(8, 73, 39, 0.3);
+        }
+
+        .calendar-day.other-month {
+            color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        /* Time Slots */
+        .time-section {
+            padding: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .time-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 4px 0;
+        }
+
+        .selected-date {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .time-slot {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            color: #374151;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .time-slot:hover {
+            border-color: #3a5bb4;
+            background: #e8f0f2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(8, 73, 39, 0.15);
+        }
+
+        .time-slot.selected {
+            background: #3a5bb4;
+            color: white;
+            border-color: #3a5bb4;
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(8, 73, 39, 0.3);
+        }
+
+        /* Mobile Time Selector */
+        .time-selector-mobile {
+            display: none;
+        }
+
+        .time-select-dropdown {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 48px;
+        }
+
+        .time-select-dropdown:hover {
+            border-color: #3a5bb4;
+            background-color: #f8fafc;
+        }
+
+        .time-select-dropdown:focus {
+            outline: none;
+            border-color: #3a5bb4;
+            box-shadow: 0 0 0 3px rgba(8, 73, 39, 0.1);
+        }
+
+        .time-select-dropdown option {
+            padding: 8px;
+            color: #374151;
+        }
+
+        /* Form Section */
+        .booking-form {
+            margin-top: 16px;
+            padding: 16px 0 0 0;
+            border-top: 2px solid #f1f5f9;
+            flex-shrink: 0;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #3a5bb4;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-input:hover {
+            border-color: #9ca3af;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #9ca3af;
+            box-shadow: 0 0 0 4px rgba(156, 163, 175, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .payment-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            transition: all 0.2s ease;
+        }
+
+        .payment-container:hover {
+            border-color: #3a5bb4;
+            box-shadow: 0 4px 12px rgba(8, 73, 39, 0.1);
+        }
+
+        .submit-button {
+            width: 100%;
+            background: #3a5bb4;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(8, 73, 39, 0.3);
+            letter-spacing: 0.5px;
+        }
+
+        .submit-button:hover:not(:disabled) {
+            background: #063318;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(8, 73, 39, 0.4);
+        }
+
+        .submit-button:disabled {
+            background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message-box {
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .message-success {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #3a5bb4;
+            border: 2px solid #a7f3d0;
+        }
+
+        .message-error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+            color: #dc2626;
+            border: 2px solid #fecaca;
+        }
+
+        @media (max-width: 1024px) {
+            .booking-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            
+            .sidebar {
+                min-height: auto;
+                padding: 32px 24px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .main-content {
+                padding: 32px 24px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .date-time-selector {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .calendar-section, .time-section {
+                height: auto;
+                min-height: auto;
+            }
+
+            .calendar-grid {
+                min-height: auto;
+                height: auto;
+            }
+
+            .time-slots {
+                max-height: none;
+                height: auto;
+                overflow: visible;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .booking-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            
+            .sidebar {
+                padding: 24px 20px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .main-content {
+                padding: 24px 20px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .content-title {
+                font-size: 24px;
+            }
+            
+            .brand-title {
+                font-size: 20px;
+            }
+            
+            .brand-icon {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .calendar-grid {
+                gap: 1px;
+                padding: 1px;
+            }
+            
+            .calendar-day {
+                padding: 10px;
+                min-height: 36px;
+                font-size: 14px;
+            }
+            
+            /* Hide individual time slots on mobile */
+            .time-slots {
+                display: none;
+            }
+            
+            /* Show time selector dropdown on mobile */
+            .time-selector-mobile {
+                display: block !important;
+            }
+            
+            .form-input {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            
+            .submit-button {
+                padding: 14px 20px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .booking-container {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            
+            .sidebar {
+                padding: 20px 16px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .main-content {
+                padding: 20px 16px;
+                height: auto;
+                overflow: visible;
+            }
+            
+            .booking-form {
+                padding: 24px 0;
+            }
+            
+            .booking-form > div {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+            
+            .calendar-day {
+                padding: 8px;
+                min-height: 32px;
+                font-size: 13px;
+            }
+            
+            .calendar-day-header {
+                padding: 8px 4px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="brand-section">
+                <img src="img/LOGO.png" alt="Watupdiggydog" class="brand-logo">
+                <p class="brand-subtitle">
+Full Groom - Pet Cut
+Up to 8kg
+</p>
+            </div>
+
+            <div class="session-details">
+                <div class="detail-item">
+                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>60 minutes</span>
+                </div>
+                <div class="detail-item">
+                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <span>Everton Park</span>
+                </div>
+                <div class="detail-item">
+                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                    <span>$1.00</span>
+                </div>
+            </div>
+
+            <p class="description">
+                Short body cut with fluffy face and tail or shave nose to tail.
+
+Coat will not be longer than 6mm (5 blade) unless your dog is on a regular schedule and/or knot free.
+            </p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="date-time-selector">
+                <!-- Calendar Section -->
+                <div class="calendar-section">
+                    <h3>October 2025</h3>
+                    <div class="calendar-header">
+                        <button class="nav-button" id="prev-month">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <span class="month-year">October 2025</span>
+                        <button class="nav-button" id="next-month">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">Sun</div>
+                        <div class="calendar-day-header">Mon</div>
+                        <div class="calendar-day-header">Tue</div>
+                        <div class="calendar-day-header">Wed</div>
+                        <div class="calendar-day-header">Thu</div>
+                        <div class="calendar-day-header">Fri</div>
+                        <div class="calendar-day-header">Sat</div>
+                        
+                        <!-- Calendar days - starting from Sept 29 to fill the grid -->
+                        <div class="calendar-day other-month">29</div>
+                        <div class="calendar-day other-month">30</div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day selected">2</div>
+                        <div class="calendar-day available">3</div>
+                        <div class="calendar-day">4</div>
+                        <div class="calendar-day">5</div>
+                        
+                        <div class="calendar-day">6</div>
+                        <div class="calendar-day available">7</div>
+                        <div class="calendar-day available">8</div>
+                        <div class="calendar-day available">9</div>
+                        <div class="calendar-day available">10</div>
+                        <div class="calendar-day available">11</div>
+                        <div class="calendar-day">12</div>
+                        
+                        <div class="calendar-day">13</div>
+                        <div class="calendar-day available">14</div>
+                        <div class="calendar-day available">15</div>
+                        <div class="calendar-day available">16</div>
+                        <div class="calendar-day available">17</div>
+                        <div class="calendar-day available">18</div>
+                        <div class="calendar-day">19</div>
+                        
+                        <div class="calendar-day">20</div>
+                        <div class="calendar-day available">21</div>
+                        <div class="calendar-day available">22</div>
+                        <div class="calendar-day available">23</div>
+                        <div class="calendar-day available">24</div>
+                        <div class="calendar-day available">25</div>
+                        <div class="calendar-day">26</div>
+                        
+                        <div class="calendar-day">27</div>
+                        <div class="calendar-day available">28</div>
+                        <div class="calendar-day available">29</div>
+                        <div class="calendar-day available">30</div>
+                        <div class="calendar-day available">31</div>
+                        <div class="calendar-day other-month">1</div>
+                        <div class="calendar-day other-month">2</div>
+                    </div>
+                </div>
+
+                <!-- Time Slots Section -->
+                <div class="time-section">
+                    <h3>Wednesday, Oct 2</h3>
+                    <p class="selected-date">Available times for your session</p>
+
+                    <!-- Desktop Time Slots -->
+                    <div class="time-slots">
+                        <div class="time-slot selected">7:30 AM</div>
+                        <div class="time-slot">8:30 AM</div>
+                        <div class="time-slot">9:00 AM</div>
+                        <div class="time-slot">9:30 AM</div>
+                        <div class="time-slot">10:00 AM</div>
+                        <div class="time-slot">10:30 AM</div>
+                        <div class="time-slot">11:00 AM</div>
+                        <div class="time-slot">11:30 AM</div>
+                        <div class="time-slot">1:00 PM</div>
+                        <div class="time-slot">1:30 PM</div>
+                        <div class="time-slot">2:00 PM</div>
+                        <div class="time-slot">2:30 PM</div>
+                        <div class="time-slot">3:00 PM</div>
+                        <div class="time-slot">3:30 PM</div>
+                        <div class="time-slot">4:00 PM</div>
+                    </div>
+
+                    <!-- Mobile Time Selector -->
+                    <div class="time-selector-mobile">
+                        <select id="time-select-mobile" class="time-select-dropdown">
+                            <option value="7:30 AM" selected>7:30 AM</option>
+                            <option value="8:30 AM">8:30 AM</option>
+                            <option value="9:00 AM">9:00 AM</option>
+                            <option value="9:30 AM">9:30 AM</option>
+                            <option value="10:00 AM">10:00 AM</option>
+                            <option value="10:30 AM">10:30 AM</option>
+                            <option value="11:00 AM">11:00 AM</option>
+                            <option value="11:30 AM">11:30 AM</option>
+                            <option value="1:00 PM">1:00 PM</option>
+                            <option value="1:30 PM">1:30 PM</option>
+                            <option value="2:00 PM">2:00 PM</option>
+                            <option value="2:30 PM">2:30 PM</option>
+                            <option value="3:00 PM">3:00 PM</option>
+                            <option value="3:30 PM">3:30 PM</option>
+                            <option value="4:00 PM">4:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <form id="booking-form" class="booking-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" id="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" class="form-input" required>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs for selected date/time -->
+                <input type="hidden" id="booking-date" value="2025-10-02">
+                <input type="hidden" id="booking-time" value="7:30 AM">
+
+                <div class="form-group">
+                    <label class="form-label">Payment Information</label>
+                    <div id="card-container" class="payment-container">
+                        <!-- Square Card Element will be mounted here -->
+                    </div>
+                </div>
+
+                <div id="message-box" class="hidden"></div>
+
+                <button type="submit" id="submit-button" class="submit-button" disabled>
+                    <span id="button-text">Complete Booking - $1.00</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcZ_zGtZqEJ9qArvDXN047368nJvJrB-Ys0ZXNHx7umDTglOBWRqX_qeX-MFewJrqzGg/exec'; 
+        
+        // IMPORTANT: Replace this with your Square Application ID and Location ID
+        // Note: For actual charges, you must switch from 'sandbox' to 'production' 
+        // in the square.js script tag above and use production IDs.
+        const SQUARE_APP_ID = 'sandbox-sq0idb-xgFZy8Sf4zUbQzWZDUf18Q';
+        const SQUARE_LOCATION_ID = 'L5CJMSDVG5FYK';
+        
+        const form = document.getElementById('booking-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const messageBox = document.getElementById('message-box');
+
+        let payments;
+        let card;
+
+        /** Utility function to display messages to the user */
+        function displayMessage(text, isError = false) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'message-success', 'message-error');
+            if (isError) {
+                messageBox.classList.add('message-box', 'message-error');
+            } else {
+                messageBox.classList.add('message-box', 'message-success');
+            }
+        }
+
+        /** Initialize Square Payments */
+        async function initializeCardPayment() {
+            try {
+                // Ensure the Square SDK is loaded
+                if (!window.Square) {
+                    displayMessage('Error: Square Payments SDK failed to load.', true);
+                    return;
+                }
+
+                payments = Square.payments(SQUARE_APP_ID, SQUARE_LOCATION_ID);
+                card = await payments.card();
+                await card.attach('#card-container');
+                submitButton.disabled = false;
+                displayMessage('Payment form loaded. Please enter your details.', false);
+                messageBox.classList.add('hidden'); // Hide initial success message
+
+            } catch (e) {
+                console.error('Error initializing Square Payments:', e);
+                submitButton.disabled = true;
+                displayMessage(`Failed to load payment form. Check console for details.`, true);
+            }
+        }
+
+        /** Handles the full booking and payment flow */
+        async function handleBooking(event) {
+            event.preventDefault();
+            
+            // 1. Get form data
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const date = document.getElementById('booking-date').value;
+            const time = document.getElementById('booking-time').value;
+
+            // Simple validation
+            if (!name || !email || !date || !time) {
+                displayMessage('Please fill in all required fields.', true);
+                return;
+            }
+
+            try {
+                // Set UI state for loading
+                submitButton.disabled = true;
+                buttonText.textContent = 'Processing...';
+                displayMessage('Processing payment and checking calendar availability...', false);
+
+                // 2. Tokenize the card data securely with Square
+                const tokenResult = await card.tokenize();
+                
+                if (tokenResult.status !== 'OK') {
+                    throw new Error(`Payment tokenization failed: ${tokenResult.errors.map(e => e.message).join(', ')}`);
+                }
+
+                const paymentToken = tokenResult.token;
+
+                // 3. Prepare data for Google Apps Script backend
+                const bookingData = {
+                    name,
+                    email,
+                    date,
+                    time,
+                    paymentToken,
+                    amount: 100 // $1.00 in cents
+                };
+
+                // 4. Send request to Google Apps Script
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayMessage(`Success! Your session is booked. Confirmation email with the Zoom link is on its way to ${email}.`, false);
+                    form.reset();
+                    // Reset hidden inputs to default values
+                    document.getElementById('booking-date').value = '2025-10-02';
+                    document.getElementById('booking-time').value = '7:30 AM';
+                    // Destroy the old card instance and create a new one to clear the fields
+                    await card.destroy();
+                    card = await payments.card();
+                    await card.attach('#card-container');
+                } else {
+                    // Display error from the backend script (e.g., payment failed, slot taken)
+                    throw new Error(result.error || 'Booking failed due to an unknown error.');
+                }
+
+            } catch (error) {
+                console.error('Booking Error:', error);
+                displayMessage(`Booking failed: ${error.message || 'Please check your card details and try again.'}`, true);
+            } finally {
+                // Reset UI state
+                submitButton.disabled = false;
+                buttonText.textContent = 'Complete Booking - $1.00';
+            }
+        }
+
+        // Add calendar and time slot interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentMonth = 9; // October (0-indexed)
+            let currentYear = 2025;
+            
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            // Calendar navigation
+            document.getElementById('prev-month').addEventListener('click', function() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            document.getElementById('next-month').addEventListener('click', function() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+            
+            function updateCalendar() {
+                // Update month/year display
+                const monthYearElements = document.querySelectorAll('.month-year');
+                monthYearElements.forEach(el => {
+                    el.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                });
+                
+                // Update calendar title
+                document.querySelector('.calendar-section h3').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                // Simple calendar generation (basic implementation)
+                generateCalendar(currentMonth, currentYear);
+            }
+            
+            function generateCalendar(month, year) {
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysInPrevMonth = new Date(year, month, 0).getDate();
+                
+                const calendarGrid = document.querySelector('.calendar-grid');
+                
+                // Clear existing days (keep headers)
+                const headers = calendarGrid.querySelectorAll('.calendar-day-header');
+                calendarGrid.innerHTML = '';
+                headers.forEach(header => calendarGrid.appendChild(header));
+                
+                // Add previous month's trailing days
+                for (let i = firstDay - 1; i >= 0; i--) {
+                    const day = document.createElement('div');
+                    day.className = 'calendar-day other-month';
+                    day.textContent = daysInPrevMonth - i;
+                    calendarGrid.appendChild(day);
+                }
+                
+                // Add current month's days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    
+                    // Mark some days as available (simple logic for demo)
+                    if (day % 7 !== 0 && day % 6 !== 0 && day > 2) {
+                        dayElement.classList.add('available');
+                    }
+                    
+                    // Mark day 2 as selected by default for October 2025
+                    if (month === 9 && year === 2025 && day === 2) {
+                        dayElement.classList.add('selected');
+                    }
+                    
+                    dayElement.textContent = day;
+                    calendarGrid.appendChild(dayElement);
+                }
+                
+                // Add next month's leading days to fill the grid
+                const totalCells = 42; // 6 rows × 7 days
+                const currentCells = calendarGrid.children.length - 7; // Subtract headers
+                const remainingCells = totalCells - currentCells - 7; // Subtract headers
+                
+                for (let day = 1; day <= remainingCells; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day other-month';
+                    dayElement.textContent = day;
+                    calendarGrid.appendChild(dayElement);
+                }
+                
+                // Re-attach event listeners to new calendar days
+                attachCalendarListeners();
+            }
+            
+            function attachCalendarListeners() {
+                const calendarDays = document.querySelectorAll('.calendar-day.available, .calendar-day.selected');
+                calendarDays.forEach(day => {
+                    day.addEventListener('click', function() {
+                        if (this.classList.contains('other-month')) return;
+                        
+                        // Remove selected class from all days
+                        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                        // Add selected class to clicked day
+                        this.classList.add('selected');
+                        
+                        // Update hidden date input
+                        const dayNum = this.textContent;
+                        const formattedMonth = (currentMonth + 1).toString().padStart(2, '0');
+                        const formattedDay = dayNum.padStart(2, '0');
+                        document.getElementById('booking-date').value = `${currentYear}-${formattedMonth}-${formattedDay}`;
+                        
+                        // Update date display
+                        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const dateObj = new Date(currentYear, currentMonth, parseInt(dayNum));
+                        const dayName = dayNames[dateObj.getDay()];
+                        const monthName = monthNames[currentMonth];
+                        document.querySelector('.time-section h3').textContent = `${dayName}, ${monthName.substr(0, 3)} ${dayNum}`;
+                    });
+                });
+            }
+
+            // Initial calendar setup
+            attachCalendarListeners();
+
+            // Time slot selection
+            const timeSlots = document.querySelectorAll('.time-slot');
+            timeSlots.forEach(slot => {
+                slot.addEventListener('click', function() {
+                    // Remove selected class from all slots
+                    timeSlots.forEach(s => s.classList.remove('selected'));
+                    // Add selected class to clicked slot
+                    this.classList.add('selected');
+                    
+                    // Update hidden time input
+                    document.getElementById('booking-time').value = this.textContent;
+                    
+                    // Update mobile selector to match
+                    const mobileSelect = document.getElementById('time-select-mobile');
+                    if (mobileSelect) {
+                        mobileSelect.value = this.textContent;
+                    }
+                });
+            });
+
+            // Mobile time selector
+            const mobileTimeSelect = document.getElementById('time-select-mobile');
+            if (mobileTimeSelect) {
+                mobileTimeSelect.addEventListener('change', function() {
+                    const selectedTime = this.value;
+                    
+                    // Update hidden time input
+                    document.getElementById('booking-time').value = selectedTime;
+                    
+                    // Update desktop time slots to match
+                    timeSlots.forEach(s => s.classList.remove('selected'));
+                    const matchingSlot = Array.from(timeSlots).find(slot => slot.textContent === selectedTime);
+                    if (matchingSlot) {
+                        matchingSlot.classList.add('selected');
+                    }
+                });
+            }
+        });
+
+        // Initialize the Square Card Element when the page loads
+        initializeCardPayment();
+
+        // Attach the booking handler to the form
+        form.addEventListener('submit', handleBooking);
+    </script>
+</body>
+</html>
